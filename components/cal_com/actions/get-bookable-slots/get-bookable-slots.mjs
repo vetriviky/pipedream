@@ -62,8 +62,14 @@ export default {
       description: "`range` returns objects with `start` and `end`; `time` returns start times only",
       optional: true,
       options: [
-        "time",
-        "range",
+        {
+          label: "Time (start times only)",
+          value: "time",
+        },
+        {
+          label: "Range (start and end)",
+          value: "range",
+        },
       ],
     },
     bookingUidToReschedule: {
@@ -74,20 +80,18 @@ export default {
     },
   },
   async run({ $ }) {
-    const params = {
-      start: this.start,
-      end: this.end,
-    };
-    if (this.eventTypeId) params.eventTypeId = this.eventTypeId;
-    if (this.eventTypeSlug) params.eventTypeSlug = this.eventTypeSlug;
-    if (this.username) params.username = this.username;
-    if (this.timeZone) params.timeZone = this.timeZone;
-    if (this.duration) params.duration = this.duration;
-    if (this.format) params.format = this.format;
-    if (this.bookingUidToReschedule) params.bookingUidToReschedule = this.bookingUidToReschedule;
-
     const response = await this.calCom.getBookableSlots({
-      params,
+      params: {
+        start: this.start,
+        end: this.end,
+        eventTypeId: this.eventTypeId,
+        eventTypeSlug: this.eventTypeSlug,
+        username: this.username,
+        timeZone: this.timeZone,
+        duration: this.duration,
+        format: this.format,
+        bookingUidToReschedule: this.bookingUidToReschedule,
+      },
       $,
     });
     $.export("$summary", "Successfully retrieved available slots");

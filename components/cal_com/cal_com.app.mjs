@@ -166,7 +166,7 @@ export default {
         $,
       });
     },
-    async deleteBooking(bookingUid, data = {}, $) {
+    async cancelBooking(bookingUid, data = {}, $) {
       return this._makeV2Request({
         method: "POST",
         path: `bookings/${bookingUid}/cancel`,
