@@ -55,14 +55,45 @@ export default {
     workspaceId: {
       type: "string",
       label: "Workspace ID",
-      description: "ID of the workspace. Use **List Workspaces** to find IDs. Omit to target My workspace.",
+      description: "ID of the workspace. Use the **List Workspaces** tool to see accessible workspaces. Omit to target My workspace.",
       optional: true,
     },
     workspaceName: {
       type: "string",
       label: "Workspace Name",
-      description: "Name of the workspace (alternative to `workspaceId`). Resolved via **List Workspaces**.",
+      description: "Name of the workspace (alternative to **Workspace ID**). Use the **List Workspaces** tool to see accessible workspaces.",
       optional: true,
+    },
+    groupId: {
+      type: "string",
+      label: "Workspace (Group) ID",
+      description: "Select a workspace or provide a Group ID directly. Omit to target My workspace.",
+      optional: true,
+      async options() {
+        const groups = await this.listGroups();
+        return groups?.map?.(({
+          id, name,
+        }) => ({
+          label: name,
+          value: id,
+        })) ?? [];
+      },
+    },
+    reportId: {
+      type: "string",
+      label: "Report ID",
+      description: "Select a report or provide a Report ID directly. Set **Workspace (Group) ID** to scope options to a specific workspace; omit for My workspace.",
+      async options({ groupId } = {}) {
+        const reports = await this.listReports({
+          groupId: groupId || undefined,
+        });
+        return reports?.map?.(({
+          id, name,
+        }) => ({
+          label: name,
+          value: id,
+        })) ?? [];
+      },
     },
   },
   methods: {
@@ -238,6 +269,21 @@ export default {
         path: `${this._groupPrefix(groupId)}/reports/${reportId}/exports/${exportId}/file`,
         responseType: "arraybuffer",
         returnFullResponse: true,
+      });
+    },
+    getReport({
+      reportId, groupId, ...args
+    }) {
+      if (reportId == null || reportId === "") {
+        throw new ConfigurationError("Report ID is required.");
+      }
+      const path = groupId
+        ? `/groups/${groupId}/reports/${reportId}`
+        : `/reports/${reportId}`;
+      return this._makeRequest({
+        method: "GET",
+        path,
+        ...args,
       });
     },
   },
