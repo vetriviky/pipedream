@@ -225,6 +225,18 @@ export default {
       }
       const loc = {
         type: this.location,
+        ...(this.locationAddress && {
+          address: this.locationAddress,
+        }),
+        ...(this.locationValue && {
+          location: this.locationValue,
+        }),
+        ...(this.locationPhone && {
+          phone: this.locationPhone,
+        }),
+        ...(this.locationIntegration && {
+          integration: this.locationIntegration,
+        }),
       };
       return loc;
     },
