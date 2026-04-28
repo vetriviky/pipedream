@@ -35,6 +35,41 @@ export default {
       ],
       reloadProps: true,
     },
+    // Attendee
+    attendeeName: {
+      type: "string",
+      label: "Attendee Name",
+      description: "Full name of the attendee.",
+    },
+    attendeeEmail: {
+      type: "string",
+      label: "Attendee Email",
+      description: "Email address of the attendee. Required unless **Attendee Phone Number** is provided.",
+      optional: true,
+    },
+    attendeeTimeZone: {
+      propDefinition: [
+        calCom,
+        "timeZone",
+      ],
+      label: "Attendee Time Zone",
+      description: "Time zone of the attendee, e.g. `America/New_York`.",
+    },
+    attendeeLanguage: {
+      propDefinition: [
+        calCom,
+        "language",
+      ],
+      label: "Attendee Language",
+      description: "Language for the booking confirmation.",
+      optional: true,
+    },
+    attendeePhoneNumber: {
+      type: "string",
+      label: "Attendee Phone Number",
+      description: "Phone number in international format, e.g. `+919876543210`. Can be used instead of **Attendee Email** as the contact method. Required when the event type has SMS reminders enabled.",
+      optional: true,
+    },
     // Event type identification — provide eventTypeId OR (eventTypeSlug + username/teamSlug)
     eventTypeId: {
       propDefinition: [
@@ -83,41 +118,6 @@ export default {
       type: "integer",
       label: "Length (Minutes)",
       description: "Override the event type's default duration in minutes.",
-      optional: true,
-    },
-    // Attendee
-    attendeeName: {
-      type: "string",
-      label: "Attendee Name",
-      description: "Full name of the attendee.",
-    },
-    attendeeEmail: {
-      type: "string",
-      label: "Attendee Email",
-      description: "Email address of the attendee. Required unless **Attendee Phone Number** is provided.",
-      optional: true,
-    },
-    attendeeTimeZone: {
-      propDefinition: [
-        calCom,
-        "timeZone",
-      ],
-      label: "Attendee Time Zone",
-      description: "Time zone of the attendee, e.g. `America/New_York`.",
-    },
-    attendeeLanguage: {
-      propDefinition: [
-        calCom,
-        "language",
-      ],
-      label: "Attendee Language",
-      description: "Language for the booking confirmation.",
-      optional: true,
-    },
-    attendeePhoneNumber: {
-      type: "string",
-      label: "Attendee Phone Number",
-      description: "Phone number in international format, e.g. `+919876543210`. Can be used instead of **Attendee Email** as the contact method. Required when the event type has SMS reminders enabled.",
       optional: true,
     },
     // Booking details
@@ -211,13 +211,21 @@ export default {
   methods: {
     _buildLocation() {
       if (!this.location) return undefined;
+      if (this.location === "attendeeAddress" && !this.locationAddress) {
+        throw new ConfigurationError("Address is required when Location Type is attendeeAddress.");
+      }
+      if (this.location === "attendeeDefined" && !this.locationValue) {
+        throw new ConfigurationError("Location is required when Location Type is attendeeDefined.");
+      }
+      if (this.location === "attendeePhone" && !this.locationPhone) {
+        throw new ConfigurationError("Phone Number is required when Location Type is attendeePhone.");
+      }
+      if (this.location === "integration" && !this.locationIntegration) {
+        throw new ConfigurationError("Integration is required when Location Type is integration.");
+      }
       const loc = {
         type: this.location,
       };
-      if (this.location === "attendeeAddress") loc.address = this.locationAddress;
-      else if (this.location === "attendeeDefined") loc.location = this.locationValue;
-      else if (this.location === "attendeePhone") loc.phone = this.locationPhone;
-      else if (this.location === "integration") loc.integration = this.locationIntegration;
       return loc;
     },
   },
@@ -234,9 +242,16 @@ export default {
     }
 
     // Validate event type identification
-    const hasSlugIdentifier = this.eventTypeSlug && (this.username || this.teamSlug);
-    if (!this.eventTypeId && !hasSlugIdentifier) {
-      throw new ConfigurationError("Provide either Event Type ID, or Event Type Slug with Username (individual) or Event Type Slug with Team Slug (team).");
+    const hasEventTypeId = Boolean(this.eventTypeId);
+    const hasPersonalSlug = Boolean(this.eventTypeSlug && this.username);
+    const hasTeamSlug = Boolean(this.eventTypeSlug && this.teamSlug);
+    const hasSlugIdentifier = hasPersonalSlug || hasTeamSlug;
+
+    if (this.username && this.teamSlug) {
+      throw new ConfigurationError("Provide Username or Team Slug with Event Type Slug, not both.");
+    }
+    if (hasEventTypeId === hasSlugIdentifier) {
+      throw new ConfigurationError("Provide either Event Type ID, or Event Type Slug with Username/Team Slug, but not both.");
     }
 
     const data = {
@@ -278,7 +293,10 @@ export default {
       data,
       $,
     });
-    const bookingUid = response?.data?.uid;
+    const bookingData = response?.data;
+    const bookingUid = Array.isArray(bookingData)
+      ? bookingData[0]?.uid
+      : bookingData?.uid;
     $.export(
       "$summary",
       bookingUid

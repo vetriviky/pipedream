@@ -6,7 +6,7 @@ export default {
   description: "Cancel an existing booking by its UID. Note: Cal.com v2 replaces the v1 delete endpoint with a cancellation flow; the booking is marked cancelled rather than removed. [See the documentation](https://cal.com/docs/api-reference/v2/bookings/cancel-a-booking)",
   version: "1.0.0",
   annotations: {
-    destructiveHint: false,
+    destructiveHint: true,
     openWorldHint: true,
     readOnlyHint: false,
   },
