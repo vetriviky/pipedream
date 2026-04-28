@@ -4,7 +4,7 @@ export default {
   key: "microsoft_power_bi-get-reports-by-id",
   name: "Get Report by id",
   description: "Retrieve metadata for a single Power BI report by ID. Uses My workspace by default; set Workspace (Group) ID for a specific workspace. [See the documentation](https://learn.microsoft.com/en-us/rest/api/power-bi/reports/get-report)",
-  version: "0.0.6",
+  version: "0.0.1",
   annotations: {
     destructiveHint: false,
     openWorldHint: true,
@@ -32,9 +32,9 @@ export default {
       type: "string",
       label: "Report ID",
       description: "Power BI report ID (GUID), e.g. `2f1f6a59-1b2c-4d84-9d89-4c27f8a3c111`. Set **Workspace (Group) ID** to scope options to one workspace.",
-      async options({ groupId } = {}) {
+      async options() {
         const reports = await this.microsoftPowerBi.listReports({
-          groupId: groupId || undefined,
+          groupId: this.groupId || undefined,
         });
         return reports?.map?.(({
           id, name,
