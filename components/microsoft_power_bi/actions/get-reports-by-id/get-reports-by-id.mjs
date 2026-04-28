@@ -14,19 +14,35 @@ export default {
   props: {
     microsoftPowerBi,
     groupId: {
-      propDefinition: [
-        microsoftPowerBi,
-        "groupId",
-      ],
+      type: "string",
+      label: "Workspace (Group) ID",
+      description: "Workspace group ID (GUID), e.g. `f089354e-8366-4e18-aea3-4cb4a3a50b48`. Omit to target My workspace.",
+      optional: true,
+      async options() {
+        const groups = await this.microsoftPowerBi.listGroups();
+        return groups?.map?.(({
+          id, name,
+        }) => ({
+          label: name,
+          value: id,
+        })) ?? [];
+      },
     },
     reportId: {
-      propDefinition: [
-        microsoftPowerBi,
-        "reportId",
-        ({ groupId }) => ({
-          groupId,
-        }),
-      ],
+      type: "string",
+      label: "Report ID",
+      description: "Power BI report ID (GUID), e.g. `2f1f6a59-1b2c-4d84-9d89-4c27f8a3c111`. Set **Workspace (Group) ID** to scope options to one workspace.",
+      async options({ groupId } = {}) {
+        const reports = await this.microsoftPowerBi.listReports({
+          groupId: groupId || undefined,
+        });
+        return reports?.map?.(({
+          id, name,
+        }) => ({
+          label: name,
+          value: id,
+        })) ?? [];
+      },
     },
   },
   async run({ $ }) {

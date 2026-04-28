@@ -64,37 +64,6 @@ export default {
       description: "Name of the workspace (alternative to **Workspace ID**). Use the **List Workspaces** tool to see accessible workspaces.",
       optional: true,
     },
-    groupId: {
-      type: "string",
-      label: "Workspace (Group) ID",
-      description: "Select a workspace or provide a Group ID directly. Omit to target My workspace.",
-      optional: true,
-      async options() {
-        const groups = await this.listGroups();
-        return groups?.map?.(({
-          id, name,
-        }) => ({
-          label: name,
-          value: id,
-        })) ?? [];
-      },
-    },
-    reportId: {
-      type: "string",
-      label: "Report ID",
-      description: "Select a report or provide a Report ID directly. Set **Workspace (Group) ID** to scope options to a specific workspace; omit for My workspace.",
-      async options({ groupId } = {}) {
-        const reports = await this.listReports({
-          groupId: groupId || undefined,
-        });
-        return reports?.map?.(({
-          id, name,
-        }) => ({
-          label: name,
-          value: id,
-        })) ?? [];
-      },
-    },
   },
   methods: {
     _baseUrl() {
