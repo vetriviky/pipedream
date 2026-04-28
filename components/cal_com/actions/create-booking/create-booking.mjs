@@ -18,7 +18,7 @@ export default {
     bookingType: {
       type: "string",
       label: "Booking Type",
-      description: "Select the type of booking to create.",
+      description: "Type of booking to create. Use `booking` for a standard booking, `instant` for an instant team booking, or `recurring` to create multiple occurrences.",
       options: [
         {
           label: "Regular Booking",
@@ -130,7 +130,7 @@ export default {
     location: {
       type: "string",
       label: "Location Type",
-      description: "Meeting location type. Select a type to reveal any additional required fields.",
+      description: "Meeting location type. Examples: `attendeeAddress` requires `locationAddress`, `attendeeDefined` requires `locationValue`, `attendeePhone` requires `locationPhone`, and `integration` requires `locationIntegration`.",
       options: locationTypes.LOCATION_TYPES,
       optional: true,
       reloadProps: true,
