@@ -4,7 +4,7 @@ export default {
   key: "cal_com-get-all-bookings",
   name: "Get All Bookings",
   description: "Retrieve all bookings from Cal.com. [See the documentation](https://cal.com/docs/api-reference/v2/bookings/get-all-bookings)",
-  version: "0.0.3",
+  version: "1.0.0",
   type: "action",
   annotations: {
     destructiveHint: false,

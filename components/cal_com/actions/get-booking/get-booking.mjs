@@ -4,7 +4,7 @@ export default {
   key: "cal_com-get-booking",
   name: "Get Booking",
   description: "Retrieve a booking by its UID. [See the documentation](https://cal.com/docs/api-reference/v2/bookings/get-a-booking)",
-  version: "0.0.7",
+  version: "1.0.0",
   annotations: {
     destructiveHint: false,
     openWorldHint: true,

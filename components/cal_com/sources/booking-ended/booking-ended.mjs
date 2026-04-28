@@ -5,7 +5,7 @@ export default {
   key: "cal_com-booking-ended",
   name: "Booking Ended",
   description: "Emit new event when a booking ends.",
-  version: "0.0.6",
+  version: "1.0.0",
   type: "source",
   dedupe: "unique",
   methods: {

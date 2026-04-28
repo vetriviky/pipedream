@@ -3,8 +3,8 @@ import calCom from "../../cal_com.app.mjs";
 export default {
   key: "cal_com-get-bookable-slots",
   name: "Get Bookable Slots",
-  description: "Retrieve available bookable slots between a datetime range. [See the documentation](https://cal.com/docs/api-reference/v2/slots/get-available-slots)",
-  version: "0.0.5",
+  description: "Retrieve available bookable slots between a datetime range. [See the documentation](https://cal.com/docs/api-reference/v2/slots/get-available-time-slots-for-an-event-type)",
+  version: "1.0.0",
   annotations: {
     destructiveHint: false,
     openWorldHint: true,
@@ -41,6 +41,24 @@ export default {
       type: "string",
       label: "Username",
       description: "Username of the individual event owner",
+      optional: true,
+    },
+    usernames: {
+      type: "string[]",
+      label: "Usernames",
+      description: "List of at least 2 usernames for a dynamic event (e.g. `alice` and `bob`). Sent to the API as a comma-separated string.",
+      optional: true,
+    },
+    teamSlug: {
+      type: "string",
+      label: "Team Slug",
+      description: "Slug of the team for team event type slot lookup.",
+      optional: true,
+    },
+    organizationSlug: {
+      type: "string",
+      label: "Organization Slug",
+      description: "Slug of the organization. Optional context for slug-based event type lookup.",
       optional: true,
     },
     timeZone: {
@@ -87,6 +105,9 @@ export default {
         eventTypeId: this.eventTypeId,
         eventTypeSlug: this.eventTypeSlug,
         username: this.username,
+        usernames: this.usernames?.join(","),
+        teamSlug: this.teamSlug,
+        organizationSlug: this.organizationSlug,
         timeZone: this.timeZone,
         duration: this.duration,
         format: this.format,
@@ -94,7 +115,15 @@ export default {
       },
       $,
     });
-    $.export("$summary", "Successfully retrieved available slots");
+    const slotCount = response?.data
+      ? Object.values(response.data).reduce(
+        (sum, day) => sum + (Array.isArray(day)
+          ? day.length
+          : 0),
+        0,
+      )
+      : 0;
+    $.export("$summary", `Successfully retrieved ${slotCount} available slot(s)`);
     return response;
   },
 };

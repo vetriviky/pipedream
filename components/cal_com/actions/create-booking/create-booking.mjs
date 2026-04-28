@@ -6,7 +6,7 @@ export default {
   key: "cal_com-create-booking",
   name: "Create Booking",
   description: "Create a new booking. [See the documentation](https://cal.com/docs/api-reference/v2/bookings/create-a-booking)",
-  version: "0.0.7",
+  version: "1.0.0",
   annotations: {
     destructiveHint: false,
     openWorldHint: true,
@@ -41,6 +41,7 @@ export default {
         calCom,
         "eventTypeId",
       ],
+      optional: true,
     },
     eventTypeSlug: {
       type: "string",
@@ -70,13 +71,7 @@ export default {
     start: {
       type: "string",
       label: "Start Time (UTC)",
-      description: "Booking start time in ISO 8601 UTC format, e.g. `2024-08-13T09:00:00Z`. Supersedes **Start Time** when both are set.",
-    },
-    startTime: {
-      type: "string",
-      label: "Start Time",
-      description: "Start time in ISO 8601 UTC format. Use **Start Time (UTC)** for new workflows.",
-      optional: true,
+      description: "Booking start time in ISO 8601 UTC format, e.g. `2024-08-13T09:00:00Z`.",
     },
     endTime: {
       type: "string",
@@ -90,16 +85,17 @@ export default {
       description: "Override the event type's default duration in minutes.",
       optional: true,
     },
-    // Attendee (V2)
+    // Attendee
     attendeeName: {
       type: "string",
       label: "Attendee Name",
-      description: "Full name of the attendee. Supersedes **Name** when both are set.",
+      description: "Full name of the attendee.",
     },
     attendeeEmail: {
       type: "string",
       label: "Attendee Email",
-      description: "Email address of the attendee. Required unless **Attendee Phone Number** is provided. Supersedes **Email** when both are set.",
+      description: "Email address of the attendee. Required unless **Attendee Phone Number** is provided.",
+      optional: true,
     },
     attendeeTimeZone: {
       propDefinition: [
@@ -107,7 +103,7 @@ export default {
         "timeZone",
       ],
       label: "Attendee Time Zone",
-      description: "Time zone of the attendee, e.g. `America/New_York`. Supersedes **Time Zone** when both are set.",
+      description: "Time zone of the attendee, e.g. `America/New_York`.",
     },
     attendeeLanguage: {
       propDefinition: [
@@ -115,7 +111,7 @@ export default {
         "language",
       ],
       label: "Attendee Language",
-      description: "Language for the booking confirmation. Supersedes **Language** when both are set.",
+      description: "Language for the booking confirmation.",
       optional: true,
     },
     attendeePhoneNumber: {
@@ -124,42 +120,7 @@ export default {
       description: "Phone number in international format, e.g. `+919876543210`. Can be used instead of **Attendee Email** as the contact method. Required when the event type has SMS reminders enabled.",
       optional: true,
     },
-    // Attendee (legacy — kept for backward compatibility with workflows on v0.0.6)
-    name: {
-      type: "string",
-      label: "Name",
-      description: "Attendee full name. Use **Attendee Name** for new workflows.",
-      optional: true,
-    },
-    email: {
-      type: "string",
-      label: "Email",
-      description: "Attendee email address. Use **Attendee Email** for new workflows. Required unless **Attendee Phone Number** is provided.",
-      optional: true,
-    },
-    timeZone: {
-      propDefinition: [
-        calCom,
-        "timeZone",
-      ],
-      description: "Attendee time zone. Use **Attendee Time Zone** for new workflows.",
-      optional: true,
-    },
-    language: {
-      propDefinition: [
-        calCom,
-        "language",
-      ],
-      description: "Booking confirmation language. Use **Attendee Language** for new workflows.",
-      optional: true,
-    },
     // Booking details
-    title: {
-      type: "string",
-      label: "Title",
-      description: "Custom title for the booking.",
-      optional: true,
-    },
     guests: {
       type: "string[]",
       label: "Guests",
@@ -177,13 +138,13 @@ export default {
     metadata: {
       type: "object",
       label: "Metadata",
-      description: "Custom key-value metadata. Max 50 keys; key names ≤ 40 chars, values ≤ 500 chars.",
+      description: "Custom key-value metadata, e.g. `{ \"source\": \"website\", \"campaignId\": \"abc-123\" }`. Max 50 keys; key names ≤ 40 chars, values ≤ 500 chars.",
       optional: true,
     },
     bookingFieldsResponses: {
       type: "object",
       label: "Booking Fields Responses",
-      description: "Responses to custom booking form fields. Keys are field slugs, values are the attendee's responses.",
+      description: "Responses to custom booking form fields keyed by field slug, e.g. `{ \"company-name\": \"Acme Inc\", \"team-size\": \"10-50\" }`.",
       optional: true,
     },
     // Advanced / host-only
@@ -213,13 +174,7 @@ export default {
       props.recurrenceCount = {
         type: "integer",
         label: "Recurrence Count",
-        description: "Number of occurrences for this recurring booking. Cannot exceed the event type's maximum recurrence count. Supersedes **Recurring Count** when both are set.",
-        optional: true,
-      };
-      props.recurringCount = {
-        type: "integer",
-        label: "Recurring Count",
-        description: "Number of recurring occurrences. Use **Recurrence Count** for new workflows.",
+        description: "Number of occurrences for this recurring booking. Cannot exceed the event type's maximum recurrence count.",
         optional: true,
       };
     }
@@ -267,20 +222,18 @@ export default {
     },
   },
   async run({ $ }) {
-    const resolvedStart = this.start || this.startTime;
-    if (!resolvedStart) {
-      throw new ConfigurationError("Provide Start Time (UTC) or Start Time.");
-    }
+    // Validate start time
     const utcIsoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
-    if (!utcIsoPattern.test(resolvedStart)) {
+    if (!utcIsoPattern.test(this.start)) {
       throw new ConfigurationError("Start time must be in UTC ISO 8601 format ending with 'Z', e.g. 2024-08-13T09:00:00Z.");
     }
 
-    const resolvedName = this.attendeeName || this.name;
-    const resolvedEmail = this.attendeeEmail || this.email;
-    const resolvedTimeZone = this.attendeeTimeZone || this.timeZone;
-    const resolvedLanguage = this.attendeeLanguage || this.language;
-    const resolvedRecurrenceCount = this.recurrenceCount || this.recurringCount;
+    // Validate attendee contact method
+    if (!this.attendeeEmail && !this.attendeePhoneNumber) {
+      throw new ConfigurationError("Attendee must have at least one contact method. Provide Attendee Email or Attendee Phone Number.");
+    }
+
+    // Validate event type identification
     const hasSlugIdentifier = this.eventTypeSlug && (this.username || this.teamSlug);
     if (!this.eventTypeId && !hasSlugIdentifier) {
       throw new ConfigurationError("Provide either Event Type ID, or Event Type Slug with Username (individual) or Event Type Slug with Team Slug (team).");
@@ -292,21 +245,20 @@ export default {
       username: this.username,
       teamSlug: this.teamSlug,
       organizationSlug: this.organizationSlug,
-      start: resolvedStart,
+      start: this.start,
       endTime: this.endTime,
       lengthInMinutes: this.lengthInMinutes,
       attendee: {
-        name: resolvedName,
-        email: resolvedEmail,
-        timeZone: resolvedTimeZone,
-        ...(resolvedLanguage && {
-          language: resolvedLanguage,
+        name: this.attendeeName,
+        email: this.attendeeEmail,
+        timeZone: this.attendeeTimeZone,
+        ...(this.attendeeLanguage && {
+          language: this.attendeeLanguage,
         }),
         ...(this.attendeePhoneNumber && {
           phoneNumber: this.attendeePhoneNumber,
         }),
       },
-      title: this.title,
       guests: this.guests,
       location: this._buildLocation(),
       metadata: this.metadata,
@@ -318,7 +270,7 @@ export default {
         instant: true,
       }),
       ...(this.bookingType === "recurring" && {
-        recurrenceCount: resolvedRecurrenceCount,
+        recurrenceCount: this.recurrenceCount,
       }),
     };
 

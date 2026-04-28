@@ -5,7 +5,7 @@ export default {
   key: "cal_com-booking-cancelled",
   name: "Booking Cancelled",
   description: "Emit new event when a booking is cancelled.",
-  version: "0.0.6",
+  version: "1.0.0",
   type: "source",
   dedupe: "unique",
   methods: {
