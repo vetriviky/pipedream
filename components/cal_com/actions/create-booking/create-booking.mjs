@@ -33,7 +33,6 @@ export default {
           value: "recurring",
         },
       ],
-      reloadProps: true,
     },
     // Attendee
     attendeeName: {
@@ -130,10 +129,40 @@ export default {
     location: {
       type: "string",
       label: "Location Type",
-      description: "Meeting location type. Examples: `attendeeAddress` requires `locationAddress`, `attendeeDefined` requires `locationValue`, `attendeePhone` requires `locationPhone`, and `integration` requires `locationIntegration`.",
+      description: "Meeting location type. `attendeeAddress` requires **Address**, `attendeeDefined` requires **Location**, `attendeePhone` requires **Phone Number**, and `integration` requires **Integration**.",
       options: locationTypes.LOCATION_TYPES,
       optional: true,
-      reloadProps: true,
+    },
+    locationAddress: {
+      type: "string",
+      label: "Address",
+      description: "Used only if **Location Type** is `attendeeAddress`. Physical address provided by the attendee.",
+      optional: true,
+    },
+    locationValue: {
+      type: "string",
+      label: "Location",
+      description: "Used only if **Location Type** is `attendeeDefined`. Location string defined by the attendee.",
+      optional: true,
+    },
+    locationPhone: {
+      type: "string",
+      label: "Phone Number",
+      description: "Used only if **Location Type** is `attendeePhone`. Phone number in international format, e.g. `+919876543210`.",
+      optional: true,
+    },
+    locationIntegration: {
+      type: "string",
+      label: "Integration",
+      description: "Used only if **Location Type** is `integration`. Video conferencing integration to use for this booking.",
+      options: locationTypes.INTEGRATION_OPTIONS,
+      optional: true,
+    },
+    recurrenceCount: {
+      type: "integer",
+      label: "Recurrence Count",
+      description: "Used only if **Booking Type** is `recurring`. Number of occurrences. Cannot exceed the event type's maximum recurrence count.",
+      optional: true,
     },
     metadata: {
       type: "object",
@@ -166,47 +195,6 @@ export default {
       description: "Required when the event type has email verification enabled.",
       optional: true,
     },
-  },
-  async additionalProps() {
-    const props = {};
-
-    if (this.bookingType === "recurring") {
-      props.recurrenceCount = {
-        type: "integer",
-        label: "Recurrence Count",
-        description: "Number of occurrences for this recurring booking. Cannot exceed the event type's maximum recurrence count.",
-        optional: true,
-      };
-    }
-
-    if (this.location === "attendeeAddress") {
-      props.locationAddress = {
-        type: "string",
-        label: "Address",
-        description: "Physical address provided by the attendee.",
-      };
-    } else if (this.location === "attendeeDefined") {
-      props.locationValue = {
-        type: "string",
-        label: "Location",
-        description: "Location string defined by the attendee.",
-      };
-    } else if (this.location === "attendeePhone") {
-      props.locationPhone = {
-        type: "string",
-        label: "Phone Number",
-        description: "Phone number provided by the attendee in international format, e.g. `+919876543210`.",
-      };
-    } else if (this.location === "integration") {
-      props.locationIntegration = {
-        type: "string",
-        label: "Integration",
-        description: "Video conferencing integration to use for this booking.",
-        options: locationTypes.INTEGRATION_OPTIONS,
-      };
-    }
-
-    return props;
   },
   methods: {
     _buildLocation() {
